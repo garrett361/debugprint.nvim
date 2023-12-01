@@ -231,6 +231,7 @@ local get_variable_name = function(opts)
         end
     end
 
+    print("this test")
     return variable_name
 end
 
@@ -307,19 +308,31 @@ M.deleteprints = function(opts)
     local delete_adjust = 0
 
     for count, line in ipairs(lines_to_consider) do
-        if string.find(line, global_opts.print_tag, 1, true) ~= nil then
-            local line_to_delete = count
-                - 1
-                - delete_adjust
-                + (initial_line - 1)
+        local col = string.find(line, global_opts.print_tag, 1, true)
+        if col ~= nil then
+            local row = count - 1 - delete_adjust + (initial_line - 1)
+            -- Subtract three from the col to get the node which starts outside the string
+            -- 1 due to 0/1 indexing mismatch, then 2 more to move left two and get outside the
+            -- quoted string
+            local node_start_row, _, node_end_row, _ =
+                utils.get_node_range(row, col - 3)
+            vim.print(
+                row
+                    .. "~"
+                    .. col
+                    .. ":"
+                    .. node_start_row
+                    .. "~"
+                    .. node_end_row
+            )
             vim.api.nvim_buf_set_lines(
                 0,
-                line_to_delete,
-                line_to_delete + 1,
+                node_start_row,
+                node_end_row + 1,
                 false,
                 {}
             )
-            delete_adjust = delete_adjust + 1
+            delete_adjust = delete_adjust + node_end_row - node_start_row + 1
         end
     end
 end

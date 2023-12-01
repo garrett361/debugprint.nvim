@@ -119,4 +119,8 @@ M.get_operator_selection = function()
     return vim.api.nvim_buf_get_text(0, line1, col1, line2, col2, {})[1]
 end
 
+M.get_node_range = function(row, col)
+    local node = vim.treesitter.get_node({ bufnr = 0, pos = { row, col } })
+    return node:range()
+end
 return M
